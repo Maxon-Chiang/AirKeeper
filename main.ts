@@ -40,6 +40,21 @@ namespace mbitbot {
 		pins.i2cWriteNumber(64, (CH + 1) * 256 + TM2, NumberFormat.Int16BE, false)
 	}
 
+    function GetResponse(ackst:string, chktime:number):string{
+        if (ackst.substr(ackst.length-2, 2)=="OK") {
+            ackst += "\u000D\u000A"
+        }       
+        let stime = input.runningTime()
+        let resp = ""
+        while ((input.runningTime() - stime) < chktime) {
+             resp = resp + serial.readString()
+             if (resp.includes(ackst)) {
+		        return resp
+		    }
+	    }
+        return resp
+    }
+
 	export enum MPin {
 			//% block="M1+"
 			Mpin1 = 13,
@@ -248,9 +263,9 @@ namespace mbitbot {
         Ep6 = 3
     }
 
-  //% blockId=Mbitbot_ESP8266 block="ESP8266 pin %epin|Wifi SSID %ssid|KEY %key"
+  //% blockId=Mbitbot_ESP8266 block="ESP8266 pin %epin|Wifi SSID %ssid|KEY %key|Wait %wtime"
   //% weight=10
-  export function IC_ESP8266(epin: ESPpin = 1, ssid: string, key: string): boolean {
+  export function IC_ESP8266(epin: ESPpin = 1, ssid: string, key: string, wtime: number): boolean {
 	if(epin == 1) {
 		serial.redirect(SerialPin.P13,SerialPin.P14,BaudRate.BaudRate115200)
 	}
@@ -261,22 +276,24 @@ namespace mbitbot {
 		serial.redirect(SerialPin.P1,SerialPin.P2,BaudRate.BaudRate115200)
 	}
     	serial.writeString("AT+RST" + "\u000D" + "\u000A")
-    	basic.pause(1000)
+    	GetResponse("OK",1500)
+        basic.pause(1500)
     	serial.writeString("AT+CWMODE_CUR=1" + "\u000D" + "\u000A")
-    	basic.pause(1000)
+    	GetResponse("OK",1000)
+        /* basic.pause(1000) */
     	let printT = "AT+CWJAP_CUR=\"" + ssid + "\",\"" + key + "\""
     	serial.writeString(printT + "\u000D" + "\u000A")
-    	basic.pause(9000)
-	let resp = ""	
-	let stime = input.runningTime()
-	serial.writeString("AT+CWJAP_CUR?\u000D\u000A")
-	while ((input.runningTime() - stime) < 3000) {
-	resp = resp + serial.readString()
-		if (resp.includes(ssid)) {
-			return true
-		}
-	}
-	return false	  
+    	GetResponse("OK",3000)
+        /* basic.pause(2000) */
+        let resp =""
+        for(let i = 0; i < (wtime/2); i++) {
+            serial.writeString("AT+CWJAP_CUR?\u000D\u000A")
+            resp = GetResponse(ssid,2000)
+            if (resp.includes(ssid)) {
+	            return true
+	        }
+        }
+	  	return false	  
     }
     export enum CH {
         //% block="ON"
@@ -322,11 +339,16 @@ namespace mbitbot {
   //% expandableArgumentMode"toggle" inlineInputMode=inline
   //% blockId=Upload_HttpGet block="call URL: address %addr|path %path|param1 %f1||param2 %f2 param3 %f3 param4 %f4 param5 %f5 param6 %f6 param7 %f7 param8 %f8"
   //% weight=10
-  export function WLJHS_HttpGet(addr: string, path: string, f1: string, f2?: string, f3?: string, f4?: string, f5?: string, f6?: string, f7?: string, f8?: string): void {
+  export function WLJHS_HttpGet(addr: string, path: string, f1: string, f2?: string, f3?: string, f4?: string, f5?: string, f6?: string, f7?: string, f8?: string): string {
+  	let resp=""
+    serial.writeString("AT+CIPMUX=0\u000D\u000A")
+    GetResponse("OK", 3000)
+   	serial.writeString("AT+CIPRECVMODE=1\u000D\u000A")
+    GetResponse("OK", 3000)
   	let datalist = [f1,f2,f3,f4,f5,f6,f7,f8];
 	let printT2 = "AT+CIPSTART=\"TCP\",\""+addr+"\",80"
-  	serial.writeString(printT2 + "\u000D" + "\u000A")
-  	basic.pause(4000)
+    serial.writeString(printT2 + "\u000D" + "\u000A")
+    GetResponse("CONNECT OK", 3000)
 	let sendText = "GET /"+path+"?"+f1;
     for (let i=1; i<datalist.length; i++) {
         if (datalist[i] != null) {
@@ -335,15 +357,17 @@ namespace mbitbot {
         else
             break;
     }
-	
-  	/*
-	let printT3 = "GET /" + path + "?" + f1 + "=" + v1 + "&" + f2 + "=" + v2 + "&" + f3 + "=" + v3 + "&" + f4 + "=" + v4
-	*/
   	let printT4 = "AT+CIPSEND=" + (sendText.length + 2)
   	serial.writeString(printT4 + "\u000D" + "\u000A")
-  	basic.pause(1000)
+    GetResponse("OK", 3000)
   	serial.writeString(sendText + "\u000D" + "\u000A")
-  	basic.pause(1000)
+    GetResponse("SEND OK", 3500)
+    resp = GetResponse("CLOSED", 6000)
+    if (resp.includes("WLJHS-response:")) {
+        return resp.substr(resp.indexOf("WLJHS-response:") + 15, 1024)
+    } else {
+        return resp
+    }
   }
 
 /**

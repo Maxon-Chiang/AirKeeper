@@ -416,10 +416,11 @@ namespace mbitbot {
 	let TG3PM100 = 0
   	let TG3PM10 = 0
   	let TG3PM25 = 0
+	let PMS3003_connected = false
 	
 	//% blockId=Check_Mbitbot_PMS3003 block="Check PMS3003 pin %apin"
 	//% weight=10
-	export function CIC_PMS3003(apin: Apin = 1): boolean {
+	export function CIC_PMS3003(apin: Apin = 1): void {
 		if(apin == 1) {
 			serial.redirect(SerialPin.P14,SerialPin.P13,BaudRate.BaudRate9600)
 		}
@@ -430,6 +431,7 @@ namespace mbitbot {
 			serial.redirect(SerialPin.P2,SerialPin.P1,BaudRate.BaudRate9600)
 		}
 		basic.pause(300)
+		PMS3003_connected = false;
 		let check = -1;
 		let Head;
         let dataLen;
@@ -447,46 +449,48 @@ namespace mbitbot {
                 }
             }
 		}
-		if (check!=-1)
-			return true;
-		else
-			return false;
+		if (check!=-1) PMS3003_connected = true;
 	}
 	
 	//% blockId=Read_Mbitbot_PMS3003 block="Read PMS3003 pin %apin"
 	//% weight=10
 	export function TIC_PMS3003(apin: Apin = 1): void {
-		if(apin == 1) {
-			serial.redirect(SerialPin.P14,SerialPin.P13,BaudRate.BaudRate9600)
-		}
-		else if(apin == 2) {
-			serial.redirect(SerialPin.P16,SerialPin.P15,BaudRate.BaudRate9600)
-		}
-		else {
-			serial.redirect(SerialPin.P2,SerialPin.P1,BaudRate.BaudRate9600)
-		}
-		basic.pause(300)
-		let check = -1;
-		let Head;
-
-		while (check == -1) {
-			Head = serial.readBuffer(20)
-			let count = 0;
-			while (true) {
-				if (Head.getNumber(NumberFormat.Int8LE, count) == 0x42 && Head.getNumber(NumberFormat.Int8LE, count+1) == 0x4d) {
-					check = count;
-				}
-				else if (count > 3) {
-					break;
-				}
-				count += 1
+		if (PMS3003_connected) {
+			if(apin == 1) {
+				serial.redirect(SerialPin.P14,SerialPin.P13,BaudRate.BaudRate9600)
 			}
+			else if(apin == 2) {
+				serial.redirect(SerialPin.P16,SerialPin.P15,BaudRate.BaudRate9600)
+			}
+			else {
+				serial.redirect(SerialPin.P2,SerialPin.P1,BaudRate.BaudRate9600)
+			}
+			basic.pause(300)
+			let check = -1;
+			let Head;
+
+			while (check == -1) {
+				Head = serial.readBuffer(20)
+				let count = 0;
+				while (true) {
+					if (Head.getNumber(NumberFormat.Int8LE, count) == 0x42 && Head.getNumber(NumberFormat.Int8LE, count+1) == 0x4d) {
+						check = count;
+					}
+					else if (count > 3) {
+						break;
+					}
+					count += 1
+				}
+			}
+
+			TG3PM10 = 256*Head.getNumber(NumberFormat.Int8LE, check+10) + Head.getNumber(NumberFormat.Int8LE, check+11);
+			TG3PM25 = 256*Head.getNumber(NumberFormat.Int8LE, check+12) + Head.getNumber(NumberFormat.Int8LE, check+13);
+			TG3PM100 = 256*Head.getNumber(NumberFormat.Int8LE, check+14) + Head.getNumber(NumberFormat.Int8LE, check+15);
+		} else {
+			TG3PM10 = -9999;
+			TG3PM25 = -9999;
+			TG3PM100 = -9999;
 		}
-
-		TG3PM10 = 256*Head.getNumber(NumberFormat.Int8LE, check+10) + Head.getNumber(NumberFormat.Int8LE, check+11);
-		TG3PM25 = 256*Head.getNumber(NumberFormat.Int8LE, check+12) + Head.getNumber(NumberFormat.Int8LE, check+13);
-		TG3PM100 = 256*Head.getNumber(NumberFormat.Int8LE, check+14) + Head.getNumber(NumberFormat.Int8LE, check+15);
-
 	}
 
 	//% blockId=_Mbitbot_PMS3003 block="Get PMS3003 get %pms"
@@ -530,6 +534,7 @@ namespace mbitbot {
   let DHT_Temp = 0
   let DHT_Humi = 0
   let DHTpin = DigitalPin.P1
+  let DHT11_connected = false
 
   function Ready(): number {
     pins.digitalWritePin(DHTpin, 0)
@@ -589,7 +594,7 @@ namespace mbitbot {
 
  //% blockId=Mbitbot_DHT11_Check block="Check DHT11 pin %thpin"
   //% weight=10
-  export function DHT11_Check(thpin: THpin = 1): boolean {
+  export function DHT11_Check(thpin: THpin = 1): void {
     if(thpin == 1) {
         DHTpin = DigitalPin.P13
     }
@@ -602,36 +607,37 @@ namespace mbitbot {
     else {
         DHTpin = DigitalPin.P1
     }
-    if (Ready() == 1)
-        return true;
-    else
-        return false;
+    if (Ready() == 1) DHT11_connected = true;
   }
 
 
   //% blockId=Mbitbot_DHT11 block="DHT11 pin %thpin|get %th"
   //% weight=10
   export function DHT11(thpin: THpin = 1, th: TH = 1): number {
-    if(thpin == 1) {
-        DHTpin = DigitalPin.P13
-    }
-    else if(thpin == 2) {
-        DHTpin = DigitalPin.P15
-    }
-    else if(thpin == 3) {
-        DHTpin = DigitalPin.P5
-    }
-    else {
-        DHTpin = DigitalPin.P1
-    }
-    ReadData()
-  basic.pause(100)
-    if(th == 1) {
-        return DHT_Temp
-    }
-    else {
-        return DHT_Humi
-    }
+	if (DHT11_connected) {
+		if(thpin == 1) {
+			DHTpin = DigitalPin.P13
+		}
+		else if(thpin == 2) {
+			DHTpin = DigitalPin.P15
+		}
+		else if(thpin == 3) {
+			DHTpin = DigitalPin.P5
+		}
+		else {
+			DHTpin = DigitalPin.P1
+		}
+		ReadData()
+		basic.pause(100)
+		if(th == 1) {
+			return DHT_Temp
+		}
+		else {
+			return DHT_Humi
+		}
+	} else {
+		return -9999;
+	}
   }
 
   /**

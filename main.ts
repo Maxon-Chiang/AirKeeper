@@ -416,6 +416,42 @@ namespace mbitbot {
 	let TG3PM100 = 0
   	let TG3PM10 = 0
   	let TG3PM25 = 0
+	
+	//% blockId=Check_Mbitbot_PMS3003 block="Check PMS3003 pin %apin"
+	//% weight=10
+	export function CIC_PMS3003(apin: Apin = 1): boolean {
+		if(apin == 1) {
+			serial.redirect(SerialPin.P14,SerialPin.P13,BaudRate.BaudRate9600)
+		}
+		else if(apin == 2) {
+			serial.redirect(SerialPin.P16,SerialPin.P15,BaudRate.BaudRate9600)
+		}
+		else {
+			serial.redirect(SerialPin.P2,SerialPin.P1,BaudRate.BaudRate9600)
+		}
+		basic.pause(300)
+		let check = -1;
+		let Head;
+		let stime = input.runningTime();
+		while ((check == -1) && ((input.runningTime() - stime) < 1000)) {
+			Head = serial.readBuffer(20)
+			let count = 0;
+			while (true) {
+				if (Head.getNumber(NumberFormat.Int8LE, count) == 0x42 && Head.getNumber(NumberFormat.Int8LE, count+1) == 0x4d) {
+					check = count;
+				}
+				else if (count > 3) {
+					break;
+				}
+				count += 1
+			}
+		}
+		if (check!=-1)
+			return true;
+		else
+			return false;
+	}
+	
 	//% blockId=Read_Mbitbot_PMS3003 block="Read PMS3003 pin %apin"
 	//% weight=10
 	export function TIC_PMS3003(apin: Apin = 1): void {

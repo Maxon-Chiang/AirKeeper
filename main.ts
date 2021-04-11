@@ -432,20 +432,20 @@ namespace mbitbot {
 		basic.pause(300)
 		let check = -1;
 		let Head;
+        let dataLen;
 		let stime = input.runningTime();
-		return false;
 		while ((check == -1) && ((input.runningTime() - stime) < 1000)) {
-			Head = serial.readBuffer(20)
-			let count = 0;
-			while (true) {
-				if (Head.getNumber(NumberFormat.Int8LE, count) == 0x42 && Head.getNumber(NumberFormat.Int8LE, count+1) == 0x4d) {
-					check = count;
-				}
-				else if (count > 3) {
-					break;
-				}
-				count += 1
-			}
+			Head = serial.readBuffer(0);
+            if (Head.length>=2) {
+                dataLen = Head.length;
+                Head = serial.readBuffer(dataLen);
+                for (let i=0; i<(dataLen-1); i++) {
+                    if (Head.getNumber(NumberFormat.Int8LE, i) == 0x42 && Head.getNumber(NumberFormat.Int8LE, i+1) == 0x4d) {
+                        check = 1;
+                        break;
+                    }
+                }
+            }
 		}
 		if (check!=-1)
 			return true;
@@ -586,6 +586,28 @@ namespace mbitbot {
         pins.digitalWritePin(DHTpin, 1)
     }
   }
+
+ //% blockId=Mbitbot_DHT11_Check block="Check DHT11 pin %thpin"
+  //% weight=10
+  export function DHT11_Check(thpin: THpin = 1): boolean {
+    if(thpin == 1) {
+        DHTpin = DigitalPin.P13
+    }
+    else if(thpin == 2) {
+        DHTpin = DigitalPin.P15
+    }
+    else if(thpin == 3) {
+        DHTpin = DigitalPin.P5
+    }
+    else {
+        DHTpin = DigitalPin.P1
+    }
+    if (Ready() == 1)
+        return true;
+    else
+        return false;
+  }
+
 
   //% blockId=Mbitbot_DHT11 block="DHT11 pin %thpin|get %th"
   //% weight=10

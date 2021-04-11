@@ -41,6 +41,7 @@
     "mbitbot.RIC_PMS3003|block": "取得PMS3003感測值 %pms",
     "mbitbot.TH.TH1|block": "溫度",
     "mbitbot.TH.TH2|block": "相對溼度",
+    "mbitbot.DHT11_Check|block": "DHT11檢查 %thpin",
     "mbitbot.DHT11|block": "DHT11連接 %thpin|讀取 %th",
     "mbitbot.Light_Sensor|block": "板載光感測器",
     "mbitbot.Me_Line_Follower_Sensor|block": "mBot循線感測器連接 %jpin",

@@ -433,6 +433,7 @@ namespace mbitbot {
 		let check = -1;
 		let Head;
 		let stime = input.runningTime();
+		return false;
 		while ((check == -1) && ((input.runningTime() - stime) < 1000)) {
 			Head = serial.readBuffer(20)
 			let count = 0;

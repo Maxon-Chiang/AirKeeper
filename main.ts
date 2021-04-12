@@ -418,9 +418,10 @@ namespace mbitbot {
   	let TG3PM25 = 0
 	let PMS3003_connected = false
 	
-	//% blockId=Check_Mbitbot_PMS3003 block="Check PMS3003 pin %apin"
+	//% blockId=Check_Mbitbot_PMS3003 block="Check PMS3003 pin %apin|timeout %wtime"
 	//% weight=10
-	export function CIC_PMS3003(apin: Apin = 1): void {
+	export function CIC_PMS3003(apin: Apin = 1, wtime: number): void {
+        if (wtime<4) wtime=4;
 		if(apin == 1) {
 			serial.redirect(SerialPin.P14,SerialPin.P13,BaudRate.BaudRate9600)
 		}
@@ -436,20 +437,20 @@ namespace mbitbot {
 		let Head;
         let dataLen;
 		let stime = input.runningTime();
-		while ((check == -1) && ((input.runningTime() - stime) < 4000)) {
+		while ((check == -1) && ((input.runningTime() - stime) < (wtime*1000))) {
 			Head = serial.readBuffer(0);
             if (Head.length>=2) {
                 dataLen = Head.length;
                 Head = serial.readBuffer(dataLen);
                 for (let i=0; i<(dataLen-1); i++) {
                     if (Head.getNumber(NumberFormat.Int8LE, i) == 0x42 && Head.getNumber(NumberFormat.Int8LE, i+1) == 0x4d) {
+                        PMS3003_connected = true;
                         check = 1;
                         break;
                     }
                 }
             }
 		}
-		if (check!=-1) PMS3003_connected = true;
 	}
 	
 	//% blockId=Read_Mbitbot_PMS3003 block="Read PMS3003 pin %apin"

@@ -436,7 +436,7 @@ namespace mbitbot {
 		let Head;
         let dataLen;
 		let stime = input.runningTime();
-		while ((check == -1) && ((input.runningTime() - stime) < 1000)) {
+		while ((check == -1) && ((input.runningTime() - stime) < 2000)) {
 			Head = serial.readBuffer(0);
             if (Head.length>=2) {
                 dataLen = Head.length;

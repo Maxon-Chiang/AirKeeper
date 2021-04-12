@@ -263,9 +263,25 @@ namespace mbitbot {
         Ep6 = 3
     }
 
+	let ESP_pin=0
+
+
+function SwitchESPSerial() : void {
+	if(ESP_pin == 1) {
+		serial.redirect(SerialPin.P13,SerialPin.P14,BaudRate.BaudRate115200)
+	}
+	else if(ESP_pin == 2) {
+		serial.redirect(SerialPin.P15,SerialPin.P16,BaudRate.BaudRate115200)
+	}
+	else {
+		serial.redirect(SerialPin.P1,SerialPin.P2,BaudRate.BaudRate115200)
+	}
+}
+
   //% blockId=Mbitbot_ESP8266 block="ESP8266 pin %epin|Wifi SSID %ssid|KEY %key|Wait %wtime"
   //% weight=10
   export function IC_ESP8266(epin: ESPpin = 1, ssid: string, key: string, wtime: number): boolean {
+	ESP_pin = epin
 	if(epin == 1) {
 		serial.redirect(SerialPin.P13,SerialPin.P14,BaudRate.BaudRate115200)
 	}
@@ -325,6 +341,7 @@ namespace mbitbot {
   //% blockId=Upload_ThingSpeak block="Upload ThingSpeak API Keys %apikey|Field1 %f1|Field2 %f2|Field3 %f3|Field4 %f4|Field5 %f5|Field6 %f6|Field7 %f7|Field8 %f8"
   //% weight=10
   export function IC_ThingSpeak(apikey: string, f1: number, f2: number, f3: number, f4: number, f5: number, f6: number, f7: number, f8: number): void {
+  	SwitchESPSerial()
   	let printT2 = "AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80"
   	serial.writeString(printT2 + "\u000D" + "\u000A")
   	basic.pause(4000)
@@ -340,7 +357,8 @@ namespace mbitbot {
   //% blockId=Upload_HttpGet block="call URL: address %addr|path %path|param1 %f1||param2 %f2 param3 %f3 param4 %f4 param5 %f5 param6 %f6 param7 %f7 param8 %f8"
   //% weight=10
   export function WLJHS_HttpGet(addr: string, path: string, f1: string, f2?: string, f3?: string, f4?: string, f5?: string, f6?: string, f7?: string, f8?: string): string {
-  	let resp=""
+  	SwitchESPSerial()
+	let resp=""
     serial.writeString("AT+CIPMUX=0\u000D\u000A")
     GetResponse("OK", 3000)
    	serial.writeString("AT+CIPRECVMODE=1\u000D\u000A")

@@ -515,15 +515,18 @@ function SwitchESPSerial() : void {
 	//% blockId=_Mbitbot_PMS3003 block="Get PMS3003 get %pms"
 	//% weight=10
 	export function RIC_PMS3003(pms: PMS = 1): number {
-		if(pms == 1) {
-			return TG3PM10
-		}
-		else if(pms == 2) {
-			return TG3PM25
-		}
-		else {
-			return TG3PM100
-		}
+		if (PMS3003_connected) {
+			if(pms == 1) {
+				return TG3PM10
+			}
+			else if(pms == 2) {
+				return TG3PM25
+			}
+			else {
+				return TG3PM100
+			}
+		} else
+			return -9999
 	}
 
 

@@ -475,13 +475,13 @@ function SwitchESPSerial() : void {
 	//% weight=10
 	export function CIC_Analog(apin: Apin = 1): void {
 		if(apin == 1) {
-			serial.redirect(SerialPin.P14,SerialPin.P13,BaudRate.BaudRate9600)
+			serial.redirect(SerialPin.P14,SerialPin.P13,BaudRate.BaudRate115200)
 		}
 		else if(apin == 2) {
-			serial.redirect(SerialPin.P16,SerialPin.P15,BaudRate.BaudRate9600)
+			serial.redirect(SerialPin.P16,SerialPin.P15,BaudRate.BaudRate115200)
 		}
 		else {
-			serial.redirect(SerialPin.P2,SerialPin.P1,BaudRate.BaudRate9600)
+			serial.redirect(SerialPin.P2,SerialPin.P1,BaudRate.BaudRate115200)
 		}
 	}
 	

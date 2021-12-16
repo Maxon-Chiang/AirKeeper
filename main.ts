@@ -470,6 +470,40 @@ function SwitchESPSerial() : void {
             }
 		}
 	}
+  //% blockId=PMS3003_SET block="PMS3003 Low Power Mode pin %apin|set %ch"
+  //% weight=10
+	export function PMS3003_SET(apin: Apin = 1, ch: CH = 2): void {
+	    let set_mode = 1
+	    if(ch ==1) {
+	    	set_mode = 0
+	    }
+	    else {
+	    	set_mode = 1
+	    }
+	    if(apin == 1) {
+		pins.digitalWritePin(DigitalPin.P14, set_mode)
+	    }
+	    else if(apin == 2) {
+		pins.digitalWritePin(DigitalPin.P16, set_mode)
+	    }
+	    else {
+		pins.digitalWritePin(DigitalPin.P2, set_mode)
+	    }
+	}
+
+	//% blockId=Check_Mbitbot_Analog block="Check Analog pin %apin"
+	//% weight=10
+	export function CIC_Analog(apin: Apin = 1): void {
+		if(apin == 1) {
+			serial.redirect(SerialPin.P14,SerialPin.P13,BaudRate.BaudRate9600)
+		}
+		else if(apin == 2) {
+			serial.redirect(SerialPin.P16,SerialPin.P15,BaudRate.BaudRate9600)
+		}
+		else {
+			serial.redirect(SerialPin.P2,SerialPin.P1,BaudRate.BaudRate9600)
+		}
+	}
 	
 	//% blockId=Read_Mbitbot_PMS3003 block="Read PMS3003 pin %apin"
 	//% weight=10
@@ -510,6 +544,26 @@ function SwitchESPSerial() : void {
 			TG3PM25 = -9999;
 			TG3PM100 = -9999;
 		}
+	}
+
+	//% blockId=Read_Mbitbot_Analog block="Read Analog pin %apin"
+	//% weight=10
+	export function TIC_Analog(apin: Apin = 1, tout:number): string {
+		if(apin == 1) {
+			serial.redirect(SerialPin.P14,SerialPin.P13,BaudRate.BaudRate9600)
+		}
+		else if(apin == 2) {
+			serial.redirect(SerialPin.P16,SerialPin.P15,BaudRate.BaudRate9600)
+		}
+		else {
+			serial.redirect(SerialPin.P2,SerialPin.P1,BaudRate.BaudRate9600)
+		}
+	        let stime = input.runningTime();
+        	resp = "";
+        	while ((input.runningTime() - stime) < tout) {
+             		resp = resp + serial.readString();
+		}
+        	return resp;
 	}
 
 	//% blockId=_Mbitbot_PMS3003 block="Get PMS3003 get %pms"

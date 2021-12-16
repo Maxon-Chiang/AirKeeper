@@ -546,21 +546,12 @@ function SwitchESPSerial() : void {
 		}
 	}
 
-	//% blockId=Read_Mbitbot_Analog block="Read Analog pin %apin"
+	//% blockId=Read_Mbitbot_Analog block="Read Analog wtime %wtime"
 	//% weight=10
-	export function TIC_Analog(apin: Apin = 1, tout:number): string {
-		if(apin == 1) {
-			serial.redirect(SerialPin.P14,SerialPin.P13,BaudRate.BaudRate9600)
-		}
-		else if(apin == 2) {
-			serial.redirect(SerialPin.P16,SerialPin.P15,BaudRate.BaudRate9600)
-		}
-		else {
-			serial.redirect(SerialPin.P2,SerialPin.P1,BaudRate.BaudRate9600)
-		}
+	export function TIC_Analog(wtime:number): string {
 	        let stime = input.runningTime();
-        	resp = "";
-        	while ((input.runningTime() - stime) < tout) {
+        	let resp = "";
+        	while ((input.runningTime() - stime) < wtime) {
              		resp = resp + serial.readString();
 		}
         	return resp;
